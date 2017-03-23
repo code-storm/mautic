@@ -112,11 +112,15 @@ if ($indexMode == 'list') {
      <thead>
      <tr>
          <th >user id</th>
+         <th >email</th>
          <th >usep ip</th>
+         <th> Country</th>
+<th> Last active</th>
+<th> Id</th>
          </tr>
          <tbody>
 <?php
- $conn = mysqli_connect("localhost", "root", "smallworld", "matic");
+ $conn = mysqli_connect("localhost", "root", "smallworld", "mautic");
  if (!$conn) {
 die("Connection failed: " . mysqli_connect_error());
 }
@@ -131,6 +135,10 @@ $query ="SELECT *, (SELECT GROUP_CONCAT(ipaddr SEPARATOR ';') FROM leads l2 WHER
       echo $row['mtcookie'];
       echo "</td>";
       echo "<td>";
+      echo $row['email'];
+      echo "</td>";
+
+      echo "<td>";
       echo $row['ip_all'];
       echo "</td>";
       echo "<td>";
@@ -138,6 +146,12 @@ $query ="SELECT *, (SELECT GROUP_CONCAT(ipaddr SEPARATOR ';') FROM leads l2 WHER
 
     <img src="<?php echo $flag; ?>" style="max-height: 24px;" class="mr-sm" />
 <?php
+echo "</td><td>";
+echo $row['last_active'];
+echo "</td><td>";
+echo $row['id'];
+echo "</td>";
+
       echo "</tr>";
 
       }}
