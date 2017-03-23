@@ -1,5 +1,4 @@
 <?php
-
 /*
  * @copyright   2014 Mautic Contributors. All rights reserved
  * @author      Mautic
@@ -108,3 +107,43 @@ if ($indexMode == 'list') {
         <?php $view['slots']->output('_content'); ?>
     </div>
 </div>
+
+ <table class="table" id="contact-timeline">
+     <thead>
+     <tr>
+         <th >user id</th>
+         <th >usep ip</th>
+         </tr>
+         <tbody>
+<?php
+ $conn = mysqli_connect("localhost", "root", "smallworld", "matic");
+ if (!$conn) {
+die("Connection failed: " . mysqli_connect_error());
+}
+
+$query ="SELECT *, (SELECT GROUP_CONCAT(ipaddr SEPARATOR ';') FROM leads l2 WHERE l2.mtcookie = l1.mtcookie) As ip_all FROM leads l1 GROUP BY l1.mtcookie";
+
+        $result = mysqli_query($conn,$query);
+        if (mysqli_num_rows($result) > 0){
+          while ($row = mysqli_fetch_assoc($result)){
+      echo "<tr>";
+      echo "<td>";
+      echo $row['mtcookie'];
+      echo "</td>";
+      echo "<td>";
+      echo $row['ip_all'];
+      echo "</td>";
+      echo "<td>";
+    $flag =(!empty($row['country'])) ? $view['assets']->getCountryFlag($row['country']) : '';?>
+
+    <img src="<?php echo $flag; ?>" style="max-height: 24px;" class="mr-sm" />
+<?php
+      echo "</tr>";
+
+      }}
+
+
+?>
+
+  </tbody>
+</table>
