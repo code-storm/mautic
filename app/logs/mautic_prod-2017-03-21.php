@@ -1,1 +1,0 @@
-[2017-03-21 09:57:45] mautic.NOTICE: PHP Notice - SessionHandler::gc(): ps_files_cleanup_dir: opendir(/var/lib/php/sessions) failed: Permission denied (13) - in file /var/www/html/mautic/app/cache/prod/classes.php - at line 428 [] []
