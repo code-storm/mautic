@@ -108,24 +108,26 @@ if ($indexMode == 'list') {
     </div>
 </div>
 
- <table class="table" id="contact-timeline">
+ <table class="table table-hover table-striped table-bordered" id="leadTable2">
      <thead>
      <tr>
-         <th >user id</th>
+         <th >cookie id</th>
          <th >email</th>
-         <th >usep ip</th>
+         <th>Ip Address</th>
          <th> Country</th>
 <th> Last active</th>
 <th> Id</th>
          </tr>
          <tbody>
 <?php
- $conn = mysqli_connect("localhost", "root", "smallworld", "mautic");
+ $conn = mysqli_connect("localhost", "root", "", "mautic");
  if (!$conn) {
 die("Connection failed: " . mysqli_connect_error());
 }
 
-$query ="SELECT *, (SELECT GROUP_CONCAT(ipaddr SEPARATOR ';') FROM leads l2 WHERE l2.mtcookie = l1.mtcookie) As ip_all FROM leads l1 GROUP BY l1.mtcookie";
+// $query ="SELECT *, (SELECT GROUP_CONCAT(ipaddr SEPARATOR ';') FROM leads l2 WHERE l2.mtcookie = l1.mtcookie) As ip_all FROM leads l1 GROUP BY l1.mtcookie order by l1.last_active desc";
+
+$query = "SELECT l1.id, l1.date_modified, l1.mtcookie, l1.ipaddr,l1.email, ph.lead_id,i1.ip_address,ph.city,ph.region,ph.country, l1.last_active, (SELECT GROUP_CONCAT(DISTINCT(i2.ip_address) SEPARATOR ';') FROM `leads` l2 left JOIN page_hits ph2 ON l2.id = ph2.lead_id left JOIN ip_addresses i2 on i2.id=ph2.ip_id where l2.mtcookie = l1.mtcookie) AS ip_all FROM `leads` l1 left JOIN page_hits ph ON l1.id = ph.lead_id left JOIN ip_addresses i1 on i1.id=ph.ip_id where mtcookie is not null GROUP BY l1.mtcookie order by l1.last_active desc";
 
         $result = mysqli_query($conn,$query);
         if (mysqli_num_rows($result) > 0){
@@ -138,14 +140,19 @@ $query ="SELECT *, (SELECT GROUP_CONCAT(ipaddr SEPARATOR ';') FROM leads l2 WHER
       echo $row['email'];
       echo "</td>";
 
-      echo "<td>";
-      echo $row['ip_all'];
+      echo "<td> <a href='/mautic/s/contacts/view/".$row['id']."' data-toggle='ajax'>
+                                                <div>".$row['ip_all']."</div>
+                        <div class='small'></div>
+                    </a>";
       echo "</td>";
       echo "<td>";
     $flag =(!empty($row['country'])) ? $view['assets']->getCountryFlag($row['country']) : '';?>
 
-    <img src="<?php echo $flag; ?>" style="max-height: 24px;" class="mr-sm" />
+    <img src="<?php echo $flag; ?>" alt="<?php echo $row['country'] ?>" style="max-height: 24px;" class="mr-sm" />
+
 <?php
+echo (!empty($row['city'])) ? $row['city'].", " : '';
+echo (!empty($row['state'])) ? $row['state'] : '';
 echo "</td><td>";
 echo $row['last_active'];
 echo "</td><td>";
