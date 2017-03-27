@@ -2312,4 +2312,15 @@ class LeadController extends FormController
 
         return $this->exportResultsAs($toExport, $dataType, 'contacts');
     }
+    /**
+     * @Route("/lucky/number")
+     */
+    public function numberAction()
+        {
+            $number = mt_rand(0, 100);
+
+            return new Response(
+                '<html><body>Lucky number: '.$number.'</body></html>'
+            );
+        }
 }
