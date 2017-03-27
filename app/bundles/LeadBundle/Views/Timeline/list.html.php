@@ -83,7 +83,7 @@ $baseUrl = $view['router']->path(
 
             $cookieid= $events['events'][0]['extra']["hit"]['query']['mtcookie'];
           }
-          $conn = mysqli_connect("localhost", "root", "smallworld", "mautic");
+          $conn = mysqli_connect("localhost", "root", "", "mautic");
           if (!$conn) {
           die("Connection failed: " . mysqli_connect_error());
           }
