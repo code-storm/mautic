@@ -66,7 +66,7 @@ class LeadController extends FormController
             $start = 0;
         }
 
-        $search = $this->request->get('search', $session->get('mautic.lead.filter', ''));
+        $search = $this->request->get('search', $session->get('mautic.lead.filter', 'is:anonymous'));
         $session->set('mautic.lead.filter', $search);
 
         //do some default filtering

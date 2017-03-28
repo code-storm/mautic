@@ -62,9 +62,76 @@ if ($permissions['lead:leads:editown'] || $permissions['lead:leads:editother']) 
     ];
 }
 ?>
+<?php $session = $this->get('session'); ?>
+<?php if (count($items)): 
+    if($session->get('mautic.lead.filter') != ''){
+?>
+<table class="table table-hover table-striped table-bordered" id="leadTable2">
+    <thead>
+    <tr>
+        <th >cookie id</th>
+        <th >email</th>
+        <th>Ip Address</th>
+        <th> Country</th>
+<th> Last active</th>
+<th> Id</th>
+        </tr>
+        <tbody>
+<?php
+$conn = mysqli_connect("localhost", "root", "", "mautic");
+if (!$conn) {
+die("Connection failed: " . mysqli_connect_error());
+}
 
-<?php if (count($items)): ?>
+// $query ="SELECT *, (SELECT GROUP_CONCAT(ipaddr SEPARATOR ';') FROM leads l2 WHERE l2.mtcookie = l1.mtcookie) As ip_all FROM leads l1 GROUP BY l1.mtcookie order by l1.last_active desc";
+
+$query = "SELECT l1.id, l1.date_modified, l1.mtcookie, l1.ipaddr,l1.email, ph.lead_id,i1.ip_address,ph.city,ph.region,ph.country, l1.last_active, (SELECT GROUP_CONCAT(DISTINCT(i2.ip_address) SEPARATOR ';') FROM `leads` l2 left JOIN page_hits ph2 ON l2.id = ph2.lead_id left JOIN ip_addresses i2 on i2.id=ph2.ip_id where l2.mtcookie = l1.mtcookie) AS ip_all FROM `leads` l1 left JOIN page_hits ph ON l1.id = ph.lead_id left JOIN ip_addresses i1 on i1.id=ph.ip_id where mtcookie is not null GROUP BY l1.mtcookie order by l1.last_active desc";
+
+       $result = mysqli_query($conn,$query);
+       if (mysqli_num_rows($result) > 0){
+         while ($row = mysqli_fetch_assoc($result)){
+     echo "<tr>";
+     echo "<td>";
+     echo $row['mtcookie'];
+     echo "</td>";
+     echo "<td>";
+     echo $row['email'];
+     echo "</td>";
+    
+     echo "<td> <a href='/mautic/index.php/s/contacts/view/".$row['id']."' data-toggle='ajax'>
+                                               <div>".$row['ip_all']."</div>
+                       <div class='small'></div>
+                   </a>";
+     echo "</td>";
+     echo "<td>";
+   $flag =(!empty($row['country'])) ? $view['assets']->getCountryFlag($row['country']) : '';?>
+
+   <img src="<?php echo $flag; ?>" alt="<?php echo $row['country'] ?>" style="max-height: 24px;" class="mr-sm" />
+
+<?php
+echo (!empty($row['city'])) ? $row['city'].", " : '';
+echo (!empty($row['state'])) ? $row['state'] : '';
+echo "</td><td>";
+echo $row['last_active'];
+echo "</td><td>";
+echo $row['id'];
+echo "</td>";
+
+     echo "</tr>";
+
+     }}
+
+
+?>
+
+ </tbody>
+</table>
+<?php }
+else
+{
+?>
 <div class="table-responsive">
+
     <table class="table table-hover table-striped table-bordered" id="leadTable">
         <thead>
             <tr>
@@ -141,7 +208,7 @@ if ($permissions['lead:leads:editown'] || $permissions['lead:leads:editother']) 
         </tbody>
     </table>
 </div>
-<div class="panel-footer">
+<div class="panel-footer hide">
     <?php echo $view->render('MauticCoreBundle:Helper:pagination.html.php', [
         'totalItems' => $totalItems,
         'page'       => $page,
@@ -152,6 +219,7 @@ if ($permissions['lead:leads:editown'] || $permissions['lead:leads:editother']) 
         'sessionVar' => 'lead',
     ]); ?>
 </div>
+<?php } ?>
 <?php else: ?>
 <?php echo $view->render('MauticCoreBundle:Helper:noresults.html.php'); ?>
 <?php endif; ?>
