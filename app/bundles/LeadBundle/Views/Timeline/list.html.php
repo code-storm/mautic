@@ -19,7 +19,12 @@ $baseUrl = $view['router']->path(
     ]
 );
 ?>
-
+<style>
+  tr.table-info
+  {
+    background-color: #e8e8e8;
+  }
+</style>
 <!-- timeline -->
 <div class="table-responsive">
     <table class="table table-hover table-bordered" id="contact-timeline">
@@ -71,37 +76,68 @@ $baseUrl = $view['router']->path(
             ]);
             ?>
         </tr>
+        </thead>
         <tbody>
           <?php
           if(empty($events['events'][0]['extra']["hit"]['query']['mtcookie']))
           {
 
             $cookieid= $events['events'][1]['extra']["hit"]['query']['mtcookie'];
+            $sessioncookieid= $events['events'][1]['extra']["hit"]['query']['smtcookie'];
 
           }
           else {
 
             $cookieid= $events['events'][0]['extra']["hit"]['query']['mtcookie'];
+            $sessioncookieid= $events['events'][0]['extra']["hit"]['query']['smtcookie'];
+
           }
-          $conn = mysqli_connect("localhost", "root", "", "mautic");
+          $conn = mysqli_connect("localhost", "root", "smallworld", "mautic");
           if (!$conn) {
           die("Connection failed: " . mysqli_connect_error());
           }
 
           // $query ="SELECT *, (SELECT GROUP_CONCAT(ipaddr SEPARATOR ';') FROM leads l2 WHERE l2.mtcookie = l1.mtcookie) As ip_all FROM leads l1 GROUP BY l1.mtcookie order by l1.last_active desc";
-
-          $query = "SELECT * FROM `page_hits` ph left join leads l on ph.lead_id = l.id where l.mtcookie='$cookieid'";
-
+          $emailuser = $events['events'][0]['extra']["hit"]['query']['email'];
+          if($emailuser!='')
+          {
+          $query = "SELECT *,(select i.ip_address from ip_addresses i where i.id = ph.ip_id) as ipaddr FROM page_hits ph LEFT JOIN leads l ON ph.lead_id = l.id WHERE l.email = '$emailuser' ORDER BY ph.ip_id, ph.date_hit DESC ";
+        }
+        else
+        {
+          echo $query = "SELECT *,(select i.ip_address from ip_addresses i where i.id = ph.ip_id) as ipaddr FROM page_hits ph LEFT JOIN leads l ON ph.lead_id = l.id WHERE l.smtcookie = '$sessioncookieid' ORDER BY ph.ip_id, ph.date_hit DESC ";
+        }
                  $result = mysqli_query($conn,$query);
 
 
                  if (mysqli_num_rows($result) > 0){
-                   echo "inside";
+                   $_ip;
+                   $_var_pagehit = 'Page hit';
                    while ($row = mysqli_fetch_assoc($result)){
+                   if(!isset($_ip))
+                    {
+                      $_ip = $row["ip_id"];
+                      $_var_pagehit = 'Lead Created';
+                      echo "<tr class='table-info'>
+                      <th scope='row'>IP</th> <th>".$row["ipaddr"]."</th> <td></td> <td></td><td></td> </tr>
+                      <tr><td></td><td>".$row["url"]."</td><td>".$row["url_title"]."</td><td>".$_var_pagehit."</td><td class='timeline-timestamp'>".$view['date']->toText($row['date_hit'], 'local', 'Y-m-d H:i:s', true)."</td></tr>";
+                      $_var_pagehit = 'Lead Identified';
+                    }
+                  if($_ip != $row["ip_id"])
+                    {
+                      $_ip = $row["ip_id"];
+                      $_var_pagehit = 'Lead Created';
+                      echo "<tr class='table-info'>
+                      <th scope='row'>IP</th> <th>".$row["ipaddr"]."</th> <td></td> <td></td><td></td> </tr>
+                      <tr><td></td><td>".$row["url"]."</td><td>".$row["url_title"]."</td><td>".$_var_pagehit."</td><td class='timeline-timestamp'>".$view['date']->toText($row['date_hit'], 'local', 'Y-m-d H:i:s', true)."</td></tr>";
+                      $_var_pagehit = 'Lead Identified';
+                    }
+                    else
+                      $_var_pagehit = 'Page hit';
 
           echo '<tr><td></td><td>'.$row["url"].'</td>';
           echo '<td>'.$row["url_title"].'</td>';
-          echo "<td></td>"; ?>
+          echo "<td>".$_var_pagehit."</td>"; ?>
           <td class="timeline-timestamp"><?php  echo $view['date']->toText($row['date_hit'], 'local', 'Y-m-d H:i:s', true);  ?></td>
           <?php echo "</tr>"; } }?>
 
@@ -109,7 +145,8 @@ $baseUrl = $view['router']->path(
         </tbody>
     </table>
 </div>
-<?php echo $view->render(
+<?php
+echo $view->render(
     'MauticCoreBundle:Helper:pagination.html.php',
     [
         'page'       => $events['page'],
@@ -117,7 +154,7 @@ $baseUrl = $view['router']->path(
         'fixedLimit' => true,
         'baseUrl'    => $baseUrl,
         'target'     => '#timeline-table',
-        'totalItems' => $events['total'],
+        'totalItems' => mysqli_num_rows($result) -1,
     ]
 ); ?>
 
